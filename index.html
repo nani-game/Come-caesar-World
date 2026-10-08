@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+   <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QD33QJ6L57"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-QD33QJ6L57');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南一評鑑測驗中心-學測征服者挑戰</title>
+    <!-- 📸 引入 html2canvas 網頁截圖套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: radial-gradient(circle at center, #1b2a47 0%, #0c1322 100%);
+            color: #f1f1f1;
+            margin: 0;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: #1e1e1e;
+            border: 2px solid #d4af37;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);
+            text-align: center;
+        }
+        h1 { color: #d4af37; font-size: 22px; margin-bottom: 8px; }
+        p.subtitle { color: #aaa; font-size: 14px; margin-top: 0; }
+        
+        /* 🗺️ 羅馬遠征地圖樣式 */
+        .map-container {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 25px 0 15px 0;
+            padding: 0 10px;
+        }
+        .map-line-bg {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            right: 20px;
+            height: 4px;
+            background: #333;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        .map-line-progress {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            height: 4px;
+            background: linear-gradient(90deg, #d4af37, #ffd700);
+            transform: translateY(-50%);
+            width: 0%;
+            transition: width 0.4s ease;
+            z-index: 1;
+            box-shadow: 0 0 8px #d4af37;
+        }
+        .map-node {
+            position: relative;
+            z-index: 2;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #2b2b2b;
+            border: 2px solid #555;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #888;
+            transition: all 0.3s ease;
+        }
+        .map-node.active {
+            border-color: #ffd700;
+            background: #4a3b10;
+            color: #ffd700;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+            transform: scale(1.15);
+            animation: pulse 1.5s infinite;
+        }
+        .map-node.passed-correct {
+            border-color: #4CAF50;
+            background: #1b4721;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        }
+        .map-node.passed-wrong {
+            border-color: #f44336;
+            background: #471b1b;
+            color: #ffaaaa;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        /* ⚔️ 士氣條 UI */
+        .morale-box {
+            background: #151d2a;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .morale-header {
+            display: flex;
+            justify-content: space-between;
+            color: #d4af37;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        .morale-bar-bg {
+            background: #222;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .morale-fill {
+            background: linear-gradient(90deg, #aa7c11, #ffd700);
+            height: 100%;
+            width: 100%;
+            transition: width 0.4s ease;
+        }
+
+        .question-text {
+            font-size: 17px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            text-align: left;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        /* 🖼️ 題目圖片樣式 */
+        .question-img-container {
+            width: 100%;
+            margin: 10px 0 15px 0;
+            display: none;
+        }
+        .question-img-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #d4af37;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            background: #2b2b2b;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option-btn:hover {
+            background: #3a3a3a;
+            border-color: #d4af37;
+        }
+
+        .step-section { display: none; }
+        .step-section.active { display: block; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0 5px 0;
+            border-radius: 8px;
+            border: 1px solid #d4af37;
+            background: #2b2b2b;
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+        }
+        .warning-text {
+            color: #ff9800;
+            font-size: 12px;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #d4af37, #aa7c11);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- 🏛️ 南一品牌專屬標籤 -->
+    <div style="margin-bottom: 12px;">
+        <span style="background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.4); color: #d4af37; padding: 4px 12px; border-radius: 20px; font-size: 12px; letter-spacing: 1px;">
+            🏛️ 南一評鑑測驗中心 × 獨家出品
+        </span>
+    </div>
+
+    <!-- 0. 名字輸入區段 -->
+    <div id="start-section" class="step-section active">
+        <h1>⚔️ 羅馬遠征·學測五大城池征服戰</h1>
+        <p class="subtitle">率領軍隊連破五關，攻下學測榮耀！</p>
+        
+        <input type="text" id="userName" placeholder="請輸入將軍大名 / 暱稱" maxlength="8">
+        <p class="warning-text">⚠️ 提示：挑戰結束將根據"此名字"自動生成「專屬證書」，名稱鎖定後無法隨意更換，請斟酌取名喔！</p>
+        
+        <button class="action-btn" onclick="startQuiz()">率軍開戰 🚀</button>
+    </div>
+
+    <!-- 1. 測驗關卡區段 -->
+    <div id="quiz-section" class="step-section">
+        <h1>🗺️ 遠征進度地圖</h1>
+        
+        <div class="map-container">
+            <div class="map-line-bg"></div>
+            <div id="map-progress" class="map-line-progress"></div>
+            
+            <div class="map-node active" id="node-0">🏰<br>國</div>
+            <div class="map-node" id="node-1">🏰<br>英</div>
+            <div class="map-node" id="node-2">🏰<br>自</div>
+            <div class="map-node" id="node-3">🏰<br>社</div>
+            <div class="map-node" id="node-4">🏰<br>數</div>
+        </div>
+
+        <div class="morale-box">
+            <div class="morale-header">
+                <span id="morale-title">🚩 羅馬遠征軍士氣</span>
+                <span id="morale-num">100%</span>
+            </div>
+            <div class="morale-bar-bg">
+                <div id="morale-fill" class="morale-fill"></div>
+            </div>
+        </div>
+
+        <!-- 題目文字 -->
+        <div id="question-box" class="question-text">載入題目中...</div>
+        
+        <!-- 🖼️ 題目圖片放置處 -->
+        <div id="question-img-box" class="question-img-container">
+            <img id="question-img" src="" alt="題目圖表">
+        </div>
+
+        <div id="options-box"></div>
+    </div>
+
+    <!-- 2. 結果與卡片生成區段 -->
+    <div id="result-section" class="step-section">
+        <h1 id="result-title">遠征結算中...</h1>
+        <p id="result-desc" class="subtitle"></p>
+
+        <canvas id="cardCanvas"></canvas>
+        
+        <div style="margin-top: 15px;">
+            <!-- 📥 下載整個黃框框圖片按鈕 -->
+            <button class="action-btn" id="downloadBtn" onclick="downloadCard()" style="margin-bottom: 10px; background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white;">
+                📥 下載專屬戰績卡圖片
+            </button>
+
+            <button class="action-btn" id="shareBtn" onclick="copyShareLink()">
+                📢 複製挑戰連結，去 IG @同學來雪恥！
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =========================================================
+   🎓 企劃專員編輯區（設定題目與判定分數）
+   ========================================================= */
+
+const PASS_SCORE = 100; 
+
+const quizData = [
+    {
+        question: `Q1國文城池. 下列是一段古文，依據文意，甲、乙、丙、丁排列順序做適當的是:
+甲、頭其勿逼，逼則使彼實而我虛
+乙、臨時變通，宜勿執一
+丙、續多則勢分，勢分則難救
+丁、虛則易攻，實則難破`,
+        image: null,
+        options: [
+            "A. 甲乙丙丁",
+            "B. 甲丁丙乙",
+            "C. 丙甲丁乙",
+            "D. 丙丁乙甲"
+        ],
+        answer: 2 
+    },
+    {
+        question: "Q2英文城池. Out of programmed loyalty,this household robot is designed to be _______to its owner's voice cpmmands.",
+        image: null,
+        options: [
+            "A. allergic",
+            "B. reluctant",
+            "C. obedient",
+            "D. resistant"
+        ],
+        answer: 2 
+    },
+    {
+        question: "Q3自然城池. 1803年英國人道耳頓(Dalton)提出了原子說，敘述原子勢形成物質的最小粒子不可切割，但隨著科技的進步，我們已知原子是由更微小的粒子所組成。關於組成粒子的各種粒子性質敘述，下列何者錯誤?",
+        image: null,
+        options: [
+            "A. 所有原子都具有電子，且電子為負電",
+            "B. 所有原子都具有原子核，且原子核為正電",
+            "C. 所有原子都具有中子，糗中子為電中性",
+            "D. 質子與電子帶電量相同，但電性相異",
+            "E. 同位素之間中子數不同"
+        ],
+        answer: 2 
+    },
+    {
+        question: "Q4圖是以臺灣為中心等具投影地圖，下列有關此圖的敘述何者正確?",
+        image: "q4圖.png", 
+        options: [
+            "A. 由圖可知距離臺灣最遠處為南美洲",
+            "B. 因距離維持正確比例，圖中各大洲的面積也維持正確比例",
+            "C. 同心圓12,000公里代表圓周長，其半徑即為臺灣與紐約的距離",
+            "D. 由圖可推知臺北與新加坡的直線距離約等於開羅與孟買的直線距離"
+        ],
+        answer: 0 
+    },
+    {
+        question: "Q5數學城池. 甲、乙、......、壬共9人抽籤平分成3隊報名籃球賽，則甲、乙同隊的機率為下列哪一項?",
+        image: null,
+        options: [
+            "A. 1/12 ",
+            "B. 1/4 ",
+            "C. 1/3 ",
+            "D. 1/2 ",
+            "E. 2/3 "
+        ],
+        answer: 1 
+    }
+];
+
+/* =========================================================
+   ⚙️ 系統邏輯核心
+   ========================================================= */
+
+let currentQuestion = 0;
+let userScore = 0;
+let morale = 100;
+let isPassed = false;
+let playerName = "";
+
+function startQuiz() {
+    const input = document.getElementById('userName');
+    playerName = input.value.trim();
+
+    if (!playerName) {
+        alert('請先輸入將軍大名，才能開啟征服之旅！');
+        return;
+    }
+
+    switchSection('quiz-section');
+    showQuestion();
+}
+
+function showQuestion() {
+    const q = quizData[currentQuestion];
+    document.getElementById('question-box').innerText = q.question;
+
+    // 🖼️ 處理圖片動態顯示與隱藏
+    const imgBox = document.getElementById('question-img-box');
+    const qImg = document.getElementById('question-img');
+    
+    if (q.image) {
+        qImg.src = q.image + '?v=' + Date.now();
+        imgBox.style.display = 'block';
+    } else {
+        imgBox.style.display = 'none';
+        qImg.src = '';
+    }
+
+    // 更新地圖節點
+    for(let i=0; i<5; i++){
+        const node = document.getElementById(`node-${i}`);
+        if(i === currentQuestion) {
+            node.classList.add('active');
+        } else if(i > currentQuestion) {
+            node.className = 'map-node';
+        }
+    }
+
+    const optionsBox = document.getElementById('options-box');
+    optionsBox.innerHTML = '';
+    
+    q.options.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = optText;
+        btn.onclick = () => selectAnswer(index);
+        optionsBox.appendChild(btn);
+    });
+}
+
+function selectAnswer(selectedIndex) {
+    const scorePerQ = 100 / quizData.length;
+    const currentNode = document.getElementById(`node-${currentQuestion}`);
+    
+    currentNode.classList.remove('active');
+
+    if (selectedIndex === quizData[currentQuestion].answer) {
+        userScore += scorePerQ;
+        currentNode.classList.add('passed-correct');
+        currentNode.innerHTML = "🚩<br>攻下";
+    } else {
+        morale -= 20;
+        if(morale < 0) morale = 0;
+        currentNode.classList.add('passed-wrong');
+        currentNode.innerHTML = "💥<br>失守";
+    }
+
+    document.getElementById('morale-fill').style.width = morale + '%';
+    document.getElementById('morale-num').innerText = morale + '%';
+
+    const mapProgress = document.getElementById('map-progress');
+    const progressPercent = ((currentQuestion + 1) / (quizData.length - 1)) * 100;
+    mapProgress.style.width = Math.min(progressPercent, 100) + '%';
+
+    currentQuestion++;
+
+    if (currentQuestion < quizData.length) {
+        showQuestion();
+    } else {
+        setTimeout(finishQuiz, 400);
+    }
+}
+
+function finishQuiz() {
+    switchSection('result-section');
+
+    isPassed = Math.round(userScore) >= PASS_SCORE;
+
+    const resTitle = document.getElementById('result-title');
+    const resDesc = document.getElementById('result-desc');
+    const shareBtn = document.getElementById('shareBtn');
+
+    if (isPassed) {
+        resTitle.innerText = "🟢 凱旋歸來！攻下五大城池！";
+        resTitle.style.color = "#4CAF50";
+        resDesc.innerText = `最終士氣：${morale}%！凱撒軍團承認【${playerName}】將軍的極致戰略！`;
+        shareBtn.innerText = "🏆 複製連結，發 IG 讓同學膜拜！";
+    } else {
+        resTitle.innerText = "🔴 遠征受挫！軍隊亟需支援！";
+        resTitle.style.color = "#F44336";
+        resDesc.innerText = `最終士氣殘存 ${morale}%！【${playerName}】將軍遭遇勁敵，快叫學霸同學來救援！`;
+        shareBtn.innerText = "⚔️ 複製連結，發 IG @同學來支援攻城！";
+    }
+
+    generateCard();
+}
+
+function generateCard() {
+    const canvas = document.getElementById('cardCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const img = new Image();
+    img.src = (isPassed ? 'success.png' : 'fail.png') + '?v=' + Date.now();
+
+    img.onload = function() {
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // 1. 分別設定成功 / 失敗的高度與陰影
+        let nameYPosition;
+
+        if (isPassed) {
+            ctx.fillStyle = '#000000';                      // 成功：黑色字
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; // 成功：白色陰影/發光
+            ctx.shadowBlur = 8;
+            nameYPosition = canvas.height * 0.7;          // 成功版中線高度
+        } else {
+            ctx.fillStyle = '#FFFFFF';                      // 失敗：白色字
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';         // 失敗：黑色深陰影
+            ctx.shadowBlur = 12;
+            // 📍 失敗版微調：再往下移一些些，讓紅線對齊文字中線
+            nameYPosition = canvas.height * 0.7; 
+        }
+        
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 3;
+
+        // 2. 自動計算字體大小 (字數多自動遞減縮小)
+        // 限制最大渲染寬度為石板框寬度的 58% (留出安全邊距)
+        const maxWidth = canvas.width * 0.58; 
+        
+        // 預設最大字體 (約佔圖片高度 8.5%)
+        let fontSize = Math.round(canvas.height * 0.085); 
+        ctx.font = `bold ${fontSize}px "PingFang TC", "Microsoft JhengHei", sans-serif`;
+
+        // 只要文字超過安全寬度，就自動縮小字體直到塞得下
+        while (ctx.measureText(playerName).width > maxWidth && fontSize > 16) {
+            fontSize -= 2;
+            ctx.font = `bold ${fontSize}px "PingFang TC", "Microsoft JhengHei", sans-serif`;
+        }
+
+        // 3. 渲染文字 (置中與垂直中線對齊)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(playerName, canvas.width / 2, nameYPosition);
+
+        // 重置陰影設定
+        ctx.shadowColor = 'transparent';
+
+        canvas.style.display = 'block';
+    };
+
+    img.onerror = function() {
+        alert('圖片載入失敗！請確認根目錄是否有 success.png 與 fail.png 檔案！');
+    };
+}
+    
+// 📥 截取整個黃框框 (.card) 並下載為圖片
+function downloadCard() {
+    const cardElement = document.querySelector('.card');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+
+    // 1. 隱藏按鈕，避免按鈕被截圖進去
+    if (downloadBtn) downloadBtn.style.display = 'none';
+    if (shareBtn) shareBtn.style.display = 'none';
+
+    // 2. 拍攝黃框框
+    html2canvas(cardElement, {
+        backgroundColor: '#1e1e1e', 
+        scale: 2,                   
+        useCORS: true               
+    }).then(canvas => {
+        // 3. 恢復按鈕
+        if (downloadBtn) downloadBtn.style.display = 'block';
+        if (shareBtn) shareBtn.style.display = 'block';
+
+        // 4. 下載圖片
+        const link = document.createElement('a');
+        link.download = (playerName || '羅馬將軍') + '_遠征完整戰績卡.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(err => {
+        console.error('截圖失敗:', err);
+        alert('下載失敗，請重新嘗試！');
+        
+        if (downloadBtn) downloadBtn.style.display = 'block';
+        if (shareBtn) shareBtn.style.display = 'block';
+    });
+}
+
+function copyShareLink() {
+    const dummy = document.createElement('input');
+    const text = window.location.href;
+    
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+    
+    alert('✅ 已複製挑戰連結！快發到 IG @你的戰友來幫忙吧！');
+}
+
+function switchSection(sectionId) {
+    document.querySelectorAll('.step-section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+}
+</script>
+
+</body>
+</html>
